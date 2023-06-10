@@ -193,7 +193,7 @@ def main():
     # pem_cert = f"{path}/certificates/6567355254154879349.pem"
     # pem_cert = f"{path}/certificates/8596541312035203397.pem"
     pem_cert = f"{path}/certificates/{serial_number}.pem"
-    print(check_certificate_validity(pem_cert,path,private_key))
+    print(check_certificate_validity(pem_cert,path,public_key))
       
 if __name__ == "__main__":
     main()
