@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'style.css') }}">
+    <title>{{ username }}</title>
+</head>
+<body>
+    <div class="container py-3">
+        <h1>Hello, {{ username }}!</h1>
+        <h2>Please verify your identity by uploading your certificate</h2>
+        <h3> [TODO] add upload </h3>
+
+        <form action="/delete/{{ username }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all your data ?');">
+            <button type="submit" class="btn btn-danger">Delete all my data</button>
+        </form>
+    </div>
+</body>
+</html>
