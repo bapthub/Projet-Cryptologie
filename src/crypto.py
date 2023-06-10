@@ -14,7 +14,6 @@ MONGO_URI = "mongodb+srv://admin_crypto:EdFr452H#8Q@crypto.pn2bffv.mongodb.net/?
 client = pymongo.MongoClient(MONGO_URI)
 db = client.get_database('crypto_users')
 serial_collection = db['serial_collection']
-email_collection = db['email_collection']
 
 #RSA
 #===================================================================================================
@@ -104,7 +103,8 @@ def generate_attribute_certificate(holder_name:str,holder_surname:str,holder_ema
     pem_cert = certificate.public_bytes(encoding=serialization.Encoding.PEM)
     return pem_cert,serial_number
 
-def check_certificate_validity(cert_path:str,path:str) -> str:
+def check_certificate_validity(cert_path:str,path:str,
+                               public_key:rsa.RSAPublicKey) -> str:
     #Get certificate bytes from file
     with open(cert_path, 'rb') as cert_file:
         cert_bytes = cert_file.read()
@@ -118,9 +118,9 @@ def check_certificate_validity(cert_path:str,path:str) -> str:
     serial_number = certificate.serial_number
 
     # Verify the certificate's signature and integrity
-    public_key = certificate.public_key()
+    cert_public_key = certificate.public_key()
     try:
-        public_key.verify(
+        cert_public_key.verify(
             certificate.signature,
             certificate.tbs_certificate_bytes,
             padding.PKCS1v15(),
@@ -128,16 +128,10 @@ def check_certificate_validity(cert_path:str,path:str) -> str:
         # Check the issuer name
         issuer_name = certificate.issuer.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
         if issuer_name[0].value != 'Cryptomail':
+            print("Issuer name isn't Cryptomail")
             raise Exception
-        # Check for a self-signed certificate
-        subject_name = certificate.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
-        if issuer_name == subject_name:
-            raise Exception
-        # Check the subject email 
-        #required ?
-        subject_email = certificate.subject.get_attributes_for_oid(x509.NameOID.EMAIL_ADDRESS)
-        if email_collection.find_one({'email':subject_email[0].value}) == None:
-            print("Can't find email in database")
+        if cert_public_key != public_key:
+            print("Public key doesn't match provider public key")
             raise Exception
     except Exception:
         return "invalid"
@@ -158,14 +152,19 @@ def revoke_certificate(serial_number:int,path:str) -> None:
         print(f"Can't delete serial number {serial_number} in database. Error: {e}")
     
 def main():
-    #test
-    # email_collection.insert_one({"email":"baptiste.bucamp@gmail.com"})
-    # serial_collection.insert_one({"serial_number":123})
-    # return
-    
     path = "/home/baptiste/ing2/crypto/Projet-Cryptologie"
+    #test
+    # serial_collection.insert_one({"serial_number":8876658962659781139})
+    
+    # private_key_file_test = f"{path}/private_key_test.pem"
+    # public_key_file_test = f"{path}/public_key_test.pem"
+    # private_key_test,public_key_test = load_key_pair(private_key_file_test,
+    #                                                         public_key_file_test)
+    
+    # return
     private_key_file = f"{path}/private_key.pem"
     public_key_file = f"{path}/public_key.pem"
+    
     if not os.path.exists(f"{path}/certificates"):
         os.makedirs(f"{path}/certificates")
 
@@ -182,17 +181,19 @@ def main():
     holder_email = "baptiste.bucamp@gmail.com"
     pem_cert,serial_number = generate_attribute_certificate(holder_name,
                             holder_surname,holder_email,private_key,public_key)
+    # pem_cert,serial_number = generate_attribute_certificate(holder_name,
+    #                         holder_surname,holder_email,private_key_test,public_key_test)
     
-    # Save the certificate into a file
+    # # # Save the certificate into a file
     with open(f"{path}/certificates/{serial_number}.pem", 'wb') as file:
         file.write(pem_cert) 
     
     # return
     # check validity
     # pem_cert = f"{path}/certificates/6567355254154879349.pem"
-    # pem_cert = f"{path}/certificates/csr.pem"
+    # pem_cert = f"{path}/certificates/8596541312035203397.pem"
     pem_cert = f"{path}/certificates/{serial_number}.pem"
-    print(check_certificate_validity(pem_cert,path))
+    print(check_certificate_validity(pem_cert,path,private_key))
       
 if __name__ == "__main__":
     main()
