@@ -22,7 +22,7 @@ def send_mail(receiver, cryptomail_collection):
 def verify_mail(mail, cryptomail_collection, code):
     # Verify that the code is valid for the user
     existing_mail = cryptomail_collection.find_one({"mail": mail})
-    if existing_mail and existing_mail["code"] == code:
+    if existing_mail and existing_mail.get("code") == code:
         # Delete the code in the database
         delete_code(mail, cryptomail_collection, True)
         return True
