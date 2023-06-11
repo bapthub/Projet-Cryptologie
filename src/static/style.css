@@ -63,3 +63,8 @@ iframe {
     width: 100%;
     height: 600px;
 }
+
+.custom-button-blue {
+    background-color: rgb(52, 66, 255);
+    color: white;
+  }

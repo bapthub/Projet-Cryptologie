@@ -18,42 +18,32 @@ def flask_mongodb_atlas():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'POST':
-        username = request.form['username']
-        existing_username = db.user_collection.find_one({"username": username})
-        if existing_username:
-            return redirect(url_for('login', username=username))
-        else:
-            return redirect(url_for('signup'))
-        
-    else:
-        return render_template('index.html')
+    return render_template('index.html')
 
-@app.route('/login/<username>', methods=['GET', 'POST'])
-def login(username):
+@app.route('/login', methods=['GET', 'POST'])
+def login():
     if request.method == 'GET':
-        return render_template('login.html', username=username)
+        return render_template('login.html')
 
     if request.method == 'POST':
-        return redirect(url_for('login', username=username))
+        return redirect(url_for('login'))
 
-    return render_template('login.html', username=username)
+    return render_template('login.html')
 
 # SIGN-UP PAGE
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        username = request.form['username']
         email = request.form['email']
         nom = request.form['nom']
         prenom = request.form['prenom']
 
-        existing_username = db.user_collection.find_one({"username": username})
-        if existing_username:
-            flash(f"{username} already exists")
+        existing_email = db.user_collection.find_one({"email": email})
+        if existing_email:
+            flash(f"{email} already taken")
             return redirect(url_for('signup'))
         else:
-            db.user_collection.insert_one({"username": username, "email": email, "nom": nom, "prenom": prenom})
+            db.user_collection.insert_one({"email": email, "nom": nom, "prenom": prenom, "status": "Inactive"})
             return redirect(url_for('code'))
     return render_template('signup.html')
 
@@ -67,6 +57,7 @@ def code():
         code_check = db.code_check_collection.find_one({"email": code, "code": code})
         if code_check:
             flash("correct code")
+            db.user_collection.update_one({"email": email}, {"$set": {"status": "Active"}})
             return redirect(url_for('code'))
         else:
             flash("wrong code")

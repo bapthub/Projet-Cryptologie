@@ -7,11 +7,17 @@
 </head>
 <body>
     <div class="container py-3">
-        <h1>Hello, {{ username }}!</h1>
-        <h2>Please verify your identity by uploading your certificate</h2>
-        <h3> [TODO] add upload </h3>
+        <h1>Hello!</h1>
+        <div class="container py-3">
+            <h2>Please verify your identity by uploading your certificate</h2>
+            <form action="{{ url_for('login') }}" method="post" class="form-inline my-2" enctype="multipart/form-data">
+                <label for="email" class="mr-2">Email:</label>
+                <input type="email" id="email" name="email" class="form-control mr-2" required>
+                <input type="file" id="certificate" name="certificate" class="form-control-file mr-2" required>
+                <input type="submit" value="Submit" class="btn btn-primary">
+            </form>
 
-        <form action="/delete/{{ username }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all your data ?');">
+        <form action="/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete all your data ?');">
             <button type="submit" class="btn btn-danger">Delete all my data</button>
         </form>
     </div>
