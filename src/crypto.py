@@ -18,6 +18,7 @@ client = pymongo.MongoClient(MONGO_URI)
 db = client.get_database('crypto_users')
 serial_collection = db['serial_collection']
 revoked_collection = db['revoked_collection']
+user_collection = db['user_collection']
 
 #RSA
 #===================================================================================================
@@ -107,7 +108,7 @@ def generate_attribute_certificate(holder_name:str,holder_surname:str,holder_ema
     pem_cert = certificate.public_bytes(encoding=serialization.Encoding.PEM)
     return pem_cert,serial_number
 
-def check_certificate_validity(cert_path:str,path:str,
+def check_certificate_validity_register(cert_path:str,email:str,path:str,
                                public_key:rsa.RSAPublicKey) -> str:
     #Get certificate bytes from file
     with open(cert_path, 'rb') as cert_file:
@@ -142,15 +143,44 @@ def check_certificate_validity(cert_path:str,path:str,
         if revoked_collection.find_one({'serial_number': serial_number}) != None:
             logging.debug("Certificate has been revoked")
             raise Exception
+        # Check if certificate email corresponds to user
+        cert_email = certificate.subject.get_attributes_for_oid(x509.NameOID.EMAIL_ADDRESS)[0].value
+        if email != cert_email:
+            logging.debug("Email does not match")
+            raise Exception
     except Exception:
         return "invalid"
 
     # Check the certificate's validity period
     current_time = datetime.datetime.now()
     if certificate.not_valid_before > current_time or certificate.not_valid_after < current_time:
-        remove_certificate(serial_number,path)
         return "expired"
+
+    user_collection.update_one({"email": email}, {"$set": {"start_date": certificate.not_valid_before}})
+    user_collection.update_one({"email": email}, {"$set": {"expiration_date": certificate.not_valid_after}})
     return "valid"
+
+def check_certificate_validity_login(email:str) -> str:
+
+    existing_mail = user_collection.find_one({"email": email})
+    start_date = existing_mail.get("start_date")
+    expiration_date = existing_mail.get("expiration_date")
+    serial = existing_mail.get("serial_number")
+    
+    try:
+        # Check if certificate has been revoked
+        if revoked_collection.find_one({'serial_number': serial}) != None:
+            logging.debug("Certificate has been revoked")
+            raise Exception
+        # Check the certificate's validity period
+        current_time = datetime.datetime.now()
+        if start_date > current_time or expiration_date < current_time:
+            logging.debug("Certificate has expired")
+            raise Exception
+    except Exception:
+        return "invalid"
+    return "valid"
+
 
 def remove_certificate(serial_number:int,path:str) -> None:
     if os.path.exists(f"{path}/certificates_ca/{serial_number}.pem"):

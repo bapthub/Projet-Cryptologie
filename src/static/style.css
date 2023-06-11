@@ -68,3 +68,8 @@ iframe {
     background-color: rgb(52, 66, 255);
     color: white;
   }
+
+  .custom-button-red {
+    background-color: rgba(243, 23, 7, 0.582);
+    color: white;
+  }

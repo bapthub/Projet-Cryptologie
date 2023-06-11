@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Certificate</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'style.css') }}">
+    <title>Projet Crypto</title>
 </head>
 <body>
-    <h1>Download your certificate here</h1>
-    <a href="{{ url_for('download_certificate') }}" class="btn btn-primary">Download Certificate</a>
+    <div class="container py-3">
+        <h1>Certificate</h1>
+        <form action="{{ url_for('certificate') }}" method="post" class="form-inline my-2">
+            <label for="email" class="mr-2">Email:</label>
+            <input type="email" id="email" name="email" class="form-control mr-2" required>
+            <label for="password" class="mr-2">Mot de passe:</label>
+            <input type="password" id="password" name="password" class="form-control mr-2" required>
+            <input type="submit" value="Submit" class="btn btn-primary">
+        </form>
+    </div>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-info">
+        {{ message }}
+    </div>
+    {% endfor %}
+    <button onclick="redirectToIndex()" class="form-inline my-2 custom-button-blue" >Exit</button>
+    <script>
+        function redirectToIndex() {
+            window.location.href = "/";
+        }
+    </script>
 </body>
 </html>
