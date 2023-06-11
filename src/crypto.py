@@ -4,16 +4,19 @@ import pymongo
 from typing import Tuple
 from random import randint
 from cryptography import x509
+from dotenv import load_dotenv
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa,padding
 
 #MONGODB
-MONGO_URI = "mongodb+srv://admin_crypto:EdFr452H#8Q@crypto.pn2bffv.mongodb.net/?retryWrites=true&w=majority"
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI")
 client = pymongo.MongoClient(MONGO_URI)
 db = client.get_database('crypto_users')
 serial_collection = db['serial_collection']
+revoked_collection = db['revoked_collection']
 
 #RSA
 #===================================================================================================
@@ -130,8 +133,13 @@ def check_certificate_validity(cert_path:str,path:str,
         if issuer_name[0].value != 'Cryptomail':
             print("Issuer name isn't Cryptomail")
             raise Exception
+        # Check the public key corresponds to the issuer key
         if cert_public_key != public_key:
             print("Public key doesn't match provider public key")
+            raise Exception
+        # Check if certificate has been revoked
+        if revoked_collection.find_one({'serial_number': serial_number}) != None:
+            print("Certificate has been revoked")
             raise Exception
     except Exception:
         return "invalid"
@@ -139,17 +147,31 @@ def check_certificate_validity(cert_path:str,path:str,
     # Check the certificate's validity period
     current_time = datetime.datetime.now()
     if certificate.not_valid_before > current_time or certificate.not_valid_after < current_time:
-        revoke_certificate(serial_number,path)
+        remove_certificate(serial_number,path)
         return "expired"
     return "valid"
 
-def revoke_certificate(serial_number:int,path:str) -> None:
+def remove_certificate(serial_number:int,path:str) -> None:
     if os.path.exists(f"{path}/certificates/{serial_number}.pem"):
         os.remove(f"{path}/certificates/{serial_number}.pem")
     try:
         serial_collection.delete_one({"serial_number":serial_number})
     except Exception as e:
         print(f"Can't delete serial number {serial_number} in database. Error: {e}")
+    
+def revoke_certificate(serial_number:int,path:str):
+    # remove_certificate(serial_number,path)
+    try:
+        revoked_collection.insert_one({"serial_number":serial_number})
+    except Exception as e:
+        print(f"Can't insert serial number {serial_number} in database. Error: {e}")
+        
+def revoke_all_certificates(path:str):
+    for cert in serial_collection.find():
+        serial_number = cert["serial_number"]
+        # Insert each document into the target collection
+        revoked_collection.insert_one({"serial_number":serial_number})
+        # remove_certificate(serial_number,path)
     
 def main():
     path = "/home/baptiste/ing2/crypto/Projet-Cryptologie"
@@ -161,7 +183,11 @@ def main():
     # private_key_test,public_key_test = load_key_pair(private_key_file_test,
     #                                                         public_key_file_test)
     
+    # revoke test
+    # revoke_all_certificates(path)
+    # revoke_certificate(6567355254154879349,path)
     # return
+    
     private_key_file = f"{path}/private_key.pem"
     public_key_file = f"{path}/public_key.pem"
     
@@ -184,14 +210,14 @@ def main():
     # pem_cert,serial_number = generate_attribute_certificate(holder_name,
     #                         holder_surname,holder_email,private_key_test,public_key_test)
     
-    # # # Save the certificate into a file
+    # Save the certificate into a file
     with open(f"{path}/certificates/{serial_number}.pem", 'wb') as file:
         file.write(pem_cert) 
-    
+        
     # return
     # check validity
     # pem_cert = f"{path}/certificates/6567355254154879349.pem"
-    # pem_cert = f"{path}/certificates/8596541312035203397.pem"
+    # pem_cert = f"{path}/certificates/2917869194924720863.pem"
     pem_cert = f"{path}/certificates/{serial_number}.pem"
     print(check_certificate_validity(pem_cert,path,public_key))
       
