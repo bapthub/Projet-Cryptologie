@@ -152,8 +152,8 @@ def check_certificate_validity(cert_path:str,path:str,
     return "valid"
 
 def remove_certificate(serial_number:int,path:str) -> None:
-    if os.path.exists(f"{path}/certificates/{serial_number}.pem"):
-        os.remove(f"{path}/certificates/{serial_number}.pem")
+    if os.path.exists(f"{path}/certificates_ca/{serial_number}.pem"):
+        os.remove(f"{path}/certificates_ca/{serial_number}.pem")
     try:
         serial_collection.delete_one({"serial_number":serial_number})
     except Exception as e:
@@ -191,8 +191,8 @@ def main():
     private_key_file = f"{path}/private_key.pem"
     public_key_file = f"{path}/public_key.pem"
     
-    if not os.path.exists(f"{path}/certificates"):
-        os.makedirs(f"{path}/certificates")
+    if not os.path.exists(f"{path}/certificates_ca"):
+        os.makedirs(f"{path}/certificates_ca")
 
     if not os.path.exists(private_key_file) or not os.path.exists(public_key_file):
         # Generate the key pair if the files don't exist
@@ -211,14 +211,14 @@ def main():
     #                         holder_surname,holder_email,private_key_test,public_key_test)
     
     # Save the certificate into a file
-    with open(f"{path}/certificates/{serial_number}.pem", 'wb') as file:
+    with open(f"{path}/certificates_ca/{serial_number}.pem", 'wb') as file:
         file.write(pem_cert) 
         
     # return
     # check validity
-    # pem_cert = f"{path}/certificates/6567355254154879349.pem"
-    # pem_cert = f"{path}/certificates/2917869194924720863.pem"
-    pem_cert = f"{path}/certificates/{serial_number}.pem"
+    # pem_cert = f"{path}/certificates_ca/6567355254154879349.pem"
+    # pem_cert = f"{path}/certificates_ca/2917869194924720863.pem"
+    pem_cert = f"{path}/certificates_ca/{serial_number}.pem"
     print(check_certificate_validity(pem_cert,path,public_key))
       
 if __name__ == "__main__":
