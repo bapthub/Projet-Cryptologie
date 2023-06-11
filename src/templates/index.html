@@ -6,13 +6,18 @@
     <title>Projet Crypto</title>
 </head>
 <body>
-    <div class="container py-3">
-        <h1>Projet Crypto</h1>
-        <form action="{{ url_for('index') }}" method="post" class="form-inline my-2">
-            <label for="username" class="mr-2">Username:</label>
-            <input type="text" id="username" name="username" class="form-control mr-2">
-            <input type="submit" value="Submit" class="btn btn-primary">
-        </form>
-    </div>
+    <h1>Authenticator</h1>
+    <button onclick="redirectToLogin()" class="form-inline my-2 custom-button-blue" >Se connecter</button>
+
+    <button onclick="redirectToCreateAccount()" class="form-inline my-2" >Créer un compte</button>
+
+    <script>
+        function redirectToCreateAccount() {
+            window.location.href = "/signup";
+        }
+        function redirectToLogin() {
+            window.location.href = "/login";
+        }
+    </script>
 </body>
 </html>

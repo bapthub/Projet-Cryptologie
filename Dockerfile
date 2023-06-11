@@ -13,5 +13,5 @@ EXPOSE 27017
 ENV FLASK_APP=front
 ENV FLASK_ENV=development
 
-CMD ["sleep", "infinity"]
-# CMD ["python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+#CMD ["sleep", "infinity"]
+CMD ["python3", "-m" , "flask", "run", "--host=0.0.0.0"]
