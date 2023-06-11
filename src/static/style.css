@@ -43,6 +43,7 @@ button {
 
 button:hover {
     background-color: #45a049;
+    font-weight: bold;
 }
 
 ul {
@@ -59,17 +60,37 @@ li {
     border-radius: 3px;
 }
 
-iframe {
-    width: 100%;
-    height: 600px;
-}
-
 .custom-button-blue {
     background-color: rgb(52, 66, 255);
     color: white;
   }
 
+.custom-button-blue:hover {
+    background-color: #303eb9;
+    font-weight: bold;
+}
   .custom-button-red {
-    background-color: rgba(243, 23, 7, 0.582);
+    background-color: #b12a26;
     color: white;
   }
+
+.custom-button-red:hover {
+    background-color: rgb(226, 31, 17);
+    font-weight: bold;
+}
+
+.container.py-3 {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+  }
+
+.alert.alert-info {
+    font-size: 16px;
+    color:red;
+    font-weight: bold;
+}

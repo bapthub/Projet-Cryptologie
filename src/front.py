@@ -19,7 +19,7 @@ client = pymongo.MongoClient(MONGO_URI)
 
 db = client.get_database('crypto_users')
 user_collection = db['user_collection']
-cryptomail_collection = db['code_check']
+cryptomail_collection = db['cryptomail_collection']
 
 path = os.getcwd()
 private_key_file = f"{path}/private_key.pem"
@@ -99,12 +99,13 @@ def verify():
                         return redirect(url_for('verify'))
                     
                     db.user_collection.update_one({"email": email}, {"$set": {"status": "Active"}})
-                    flash("Certificat bien valide")
+                    flash("Certificat valide")
                     return redirect(url_for('login'))
-                return "Upload error"
+                flash("Erreur d'upload")
+                return redirect(url_for('verify'))
             else:
                 flash("Email incorrect")
-                return redirect(url_for('certificate'))
+                return redirect(url_for('verify'))
 
         return redirect(url_for('verify'))
 
@@ -128,7 +129,7 @@ def signup():
         
         existing_email = db.user_collection.find_one({"email": email})
         if existing_email:
-            flash(f"{email} already taken")
+            flash(f"{email} déjà utilisé")
             return redirect(url_for('signup'))
         else:
             db.user_collection.insert_one({"email": email, "password" : hashed_password_b64, "nom": nom, "prenom": prenom, 
@@ -152,7 +153,7 @@ def code():
             with open(f"{path}/certificates_ca/{serial_number}.pem", 'wb') as file:
                 file.write(pem_cert)
             db.user_collection.update_one({"email": email}, {"$set": {"serial_number": serial_number}})
-             
+            flash("Code valide")
             return redirect(url_for('certificate'))
         else:
             flash("wrong email or code")

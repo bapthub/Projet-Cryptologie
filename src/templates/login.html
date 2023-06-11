@@ -9,17 +9,28 @@
     <div class="container py-3">
         <h1>Login</h1>
         <form action="{{ url_for('login') }}" method="post" class="form-inline my-2">
-            <label for="email" class="mr-2">Email:</label>
-            <input type="email" id="email" name="email" class="form-control mr-2" required>
-            <label for="password" class="mr-2">Mot de passe:</label>
-            <input type="password" id="password" name="password" class="form-control mr-2" required>
+            <div class="form-group">
+                <label for="email" class="mr-2">Email:</label>
+                <input type="email" id="email" name="email" class="form-control mr-2" required>
+            </div>
+            <div class="form-group">
+                <label for="password" class="mr-2">Mot de passe:</label>
+                <input type="password" id="password" name="password" class="form-control mr-2" required>
+            </div>
             <input type="submit" value="Submit" class="btn btn-primary">
         </form>
+        <button onclick="redirectToIndex()" class="form-inline my-2 custom-button-blue" >Quitter</button>
+        {% for message in get_flashed_messages() %}
+        <div class="alert alert-info">
+            {{ message }}
+        </div>
+        {% endfor %}
     </div>
-    {% for message in get_flashed_messages() %}
-    <div class="alert alert-info">
-        {{ message }}
-    </div>
-    {% endfor %}
+    <script>
+        function redirectToIndex() {
+            window.location.href = "/";
+        }
+    </script>
+
 </body>
 </html>

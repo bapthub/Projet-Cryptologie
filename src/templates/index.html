@@ -6,11 +6,12 @@
     <title>Projet Crypto</title>
 </head>
 <body>
-    <h1>Authenticator</h1>
-    <button onclick="redirectToLogin()" class="form-inline my-2 custom-button-blue" >Se connecter</button>
-    <button onclick="redirectToCreateAccount()" class="form-inline my-2" >Créer un compte</button>
-    <button onclick="redirectToVerify()" class="form-inline my-2 custom-button-red" >Vérifier mon certificat</button>
-
+    <div class="container py-3">
+        <h1>Authenticator</h1>
+        <button onclick="redirectToLogin()" class="form-inline my-2 custom-button-blue" >Se connecter</button>
+        <button onclick="redirectToCreateAccount()" class="form-inline my-2" >Créer un compte</button>
+        <button onclick="redirectToVerify()" class="form-inline my-2 custom-button-red" >Vérifier mon certificat</button>
+    </div>
     <script>
         function redirectToCreateAccount() {
             window.location.href = "/signup";
