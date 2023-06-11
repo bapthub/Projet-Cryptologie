@@ -1,14 +1,17 @@
+import os
 import random
-from email.message import EmailMessage
 import ssl
 import smtplib
 import time
 import math
 import threading
+from email.message import EmailMessage
+from dotenv import load_dotenv
 
+load_dotenv('.env')
+PASSWORD_SMTP = os.getenv("PASSWORD_SMTP")
 # Our mail used to send the codes
-sender = "cryptomailepita@gmail.com "
-
+sender = "cryptomailepita@gmail.com"
 
 def send_mail(receiver, cryptomail_collection):
     # Generate a 6 digits code
@@ -73,11 +76,6 @@ def delete_code(receiver, cryptomail_collection, force_delete):
     
 
 def send_verification_mail(receiver, code):
-    # Get the password from the password file
-    password = ""
-    with open('src/email_checking/password.txt') as f: # TODO change the access to the password 
-        password = f.readlines()[0]
-    
     # The subject and body of the mail
     subject = "CryptoMail: Verification code"
     body = f"""
@@ -102,7 +100,7 @@ def send_verification_mail(receiver, code):
     
     # Connect to the sender mail and send the code to the receiver
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-        smtp.login(sender, password)
+        smtp.login(sender, PASSWORD_SMTP)
         smtp.sendmail(sender, receiver, em.as_string())
 
     print(f"The mail to {receiver} has been sent with the verification code.")

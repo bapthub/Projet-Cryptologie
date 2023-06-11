@@ -1,5 +1,6 @@
 import os
 import datetime
+import logging
 import pymongo
 from typing import Tuple
 from random import randint
@@ -11,7 +12,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa,padding
 
 #MONGODB
-load_dotenv()
+load_dotenv('.env')
 MONGO_URI = os.getenv("MONGO_URI")
 client = pymongo.MongoClient(MONGO_URI)
 db = client.get_database('crypto_users')
@@ -72,7 +73,7 @@ def generate_serial_number() -> int:
     try:
         serial_collection.insert_one({"serial_number":serial_number})
     except Exception as e:
-        print(f"Can't insert serial number {serial_number} in database. Error: {e}")
+        logging.debug(f"Can't insert serial number {serial_number} in database. Error: {e}")
     return serial_number
 
 def generate_attribute_certificate(holder_name:str,holder_surname:str,holder_email:str,
@@ -116,7 +117,7 @@ def check_certificate_validity(cert_path:str,path:str,
     try:
         certificate = x509.load_pem_x509_certificate(cert_bytes, default_backend())
     except ValueError:
-        print("Can't load certificate from file")
+        logging.debug("Can't load certificate from file")
         return "invalid"
     serial_number = certificate.serial_number
 
@@ -131,15 +132,15 @@ def check_certificate_validity(cert_path:str,path:str,
         # Check the issuer name
         issuer_name = certificate.issuer.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
         if issuer_name[0].value != 'Cryptomail':
-            print("Issuer name isn't Cryptomail")
+            logging.debug("Issuer name isn't Cryptomail")
             raise Exception
         # Check the public key corresponds to the issuer key
         if cert_public_key != public_key:
-            print("Public key doesn't match provider public key")
+            logging.debug("Public key doesn't match provider public key")
             raise Exception
         # Check if certificate has been revoked
         if revoked_collection.find_one({'serial_number': serial_number}) != None:
-            print("Certificate has been revoked")
+            logging.debug("Certificate has been revoked")
             raise Exception
     except Exception:
         return "invalid"
@@ -157,14 +158,14 @@ def remove_certificate(serial_number:int,path:str) -> None:
     try:
         serial_collection.delete_one({"serial_number":serial_number})
     except Exception as e:
-        print(f"Can't delete serial number {serial_number} in database. Error: {e}")
+        logging.debug(f"Can't delete serial number {serial_number} in database. Error: {e}")
     
 def revoke_certificate(serial_number:int,path:str):
     # remove_certificate(serial_number,path)
     try:
         revoked_collection.insert_one({"serial_number":serial_number})
     except Exception as e:
-        print(f"Can't insert serial number {serial_number} in database. Error: {e}")
+        logging.debug(f"Can't insert serial number {serial_number} in database. Error: {e}")
         
 def revoke_all_certificates(path:str):
     for cert in serial_collection.find():
@@ -172,54 +173,3 @@ def revoke_all_certificates(path:str):
         # Insert each document into the target collection
         revoked_collection.insert_one({"serial_number":serial_number})
         # remove_certificate(serial_number,path)
-    
-def main():
-    path = "/home/baptiste/ing2/crypto/Projet-Cryptologie"
-    #test
-    # serial_collection.insert_one({"serial_number":8876658962659781139})
-    
-    # private_key_file_test = f"{path}/private_key_test.pem"
-    # public_key_file_test = f"{path}/public_key_test.pem"
-    # private_key_test,public_key_test = load_key_pair(private_key_file_test,
-    #                                                         public_key_file_test)
-    
-    # revoke test
-    # revoke_all_certificates(path)
-    # revoke_certificate(6567355254154879349,path)
-    # return
-    
-    private_key_file = f"{path}/private_key.pem"
-    public_key_file = f"{path}/public_key.pem"
-    
-    if not os.path.exists(f"{path}/certificates_ca"):
-        os.makedirs(f"{path}/certificates_ca")
-
-    if not os.path.exists(private_key_file) or not os.path.exists(public_key_file):
-        # Generate the key pair if the files don't exist
-        private_key, public_key = generate_key_pair()
-        store_key_pair(private_key, public_key, private_key_file, public_key_file)
-    else:
-        # Load the existing key pair from files
-        private_key, public_key = load_key_pair(private_key_file, public_key_file)
-    
-    holder_name = "Baptiste" 
-    holder_surname = "Bucamp"
-    holder_email = "baptiste.bucamp@gmail.com"
-    pem_cert,serial_number = generate_attribute_certificate(holder_name,
-                            holder_surname,holder_email,private_key,public_key)
-    # pem_cert,serial_number = generate_attribute_certificate(holder_name,
-    #                         holder_surname,holder_email,private_key_test,public_key_test)
-    
-    # Save the certificate into a file
-    with open(f"{path}/certificates_ca/{serial_number}.pem", 'wb') as file:
-        file.write(pem_cert) 
-        
-    # return
-    # check validity
-    # pem_cert = f"{path}/certificates_ca/6567355254154879349.pem"
-    # pem_cert = f"{path}/certificates_ca/2917869194924720863.pem"
-    pem_cert = f"{path}/certificates_ca/{serial_number}.pem"
-    print(check_certificate_validity(pem_cert,path,public_key))
-      
-if __name__ == "__main__":
-    main()
