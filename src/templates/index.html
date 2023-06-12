@@ -10,7 +10,6 @@
         <h1>Authenticator</h1>
         <button onclick="redirectToLogin()" class="form-inline my-2 custom-button-blue" >Se connecter</button>
         <button onclick="redirectToCreateAccount()" class="form-inline my-2" >Créer un compte</button>
-        <button onclick="redirectToVerify()" class="form-inline my-2 custom-button-red" >Vérifier mon certificat</button>
     </div>
     <script>
         function redirectToCreateAccount() {
@@ -18,9 +17,6 @@
         }
         function redirectToLogin() {
             window.location.href = "/login";
-        }
-        function redirectToVerify() {
-            window.location.href = "/verify";
         }
     </script>
 </body>

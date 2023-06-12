@@ -8,7 +8,6 @@ from flask_pymongo import pymongo
 from email_checking.email_checking import *
 from flask_bcrypt import Bcrypt
 
-
 app = Flask(__name__)
 
 ### ENV VARIABLES
@@ -57,65 +56,45 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        existing_mail = user_collection.find_one({"email": email})
-
-        if existing_mail:
-            user_pass_b64 = existing_mail.get("password")
-            user_pass = base64.b64decode(user_pass_b64).decode()
-            if check_password_hashed(user_pass, password):
-                if existing_mail.get("status") == "Inactive":
-                    flash("Veuillez d'abord vérifier votre certificat.", "error")
-                    return redirect(url_for('verify'))
-                if check_certificate_validity_login(email) != "valid":
-                    flash("Certificat révoqué ou expiré.", "error")
-                    return redirect(url_for('login'))
-                return "Authentification terminée"
-            else:
-                flash("Utilisateur ou mot de passe incorrect", "error")
-                return redirect(url_for('login'))
-        else:
-            flash("Utilisateur ou mot de passe incorrect", "error")
-            return redirect(url_for('login'))    
-
-    return render_template('login.html')
-
-# VERIFY CERTIFICATE PAGE
-@app.route('/verify', methods=['GET', 'POST'])
-def verify():
-    if request.method == 'GET':
-        
-        return render_template('verify.html')
-
-    if request.method == 'POST':
         if 'certificate' in request.files:
             certificate_file = request.files['certificate']
             email = request.form['email']
+            password = request.form['password']
             existing_mail = user_collection.find_one({"email": email})
 
             if existing_mail:
-                if certificate_file.filename != '':
-                    serial = existing_mail.get("serial_number")
-                    certificate_file.save(f'/tmp/{certificate_file.filename}')
-                    file_loc = f'/tmp/{certificate_file.filename}'
-                    res = check_certificate_validity_register(file_loc, email, path, public_key)
-                    if res != "valid":
-                        flash("Certificat invalide.", "error")
-                        return redirect(url_for('verify'))
-                    
-                    db.user_collection.update_one({"email": email}, {"$set": {"status": "Active"}})
-                    flash("Certificat valide.", "info")
+                user_pass_b64 = existing_mail.get("password")
+                user_pass = base64.b64decode(user_pass_b64).decode()
+                #Password check
+                if check_password_hashed(user_pass, password):
+                    #Active account check
+                    if existing_mail.get("status") == "Inactive":
+                        flash("Votre compte n'est pas activé.", "error")
+                        return redirect(url_for('resend'))
+                    # Certificate validity check
+                    if certificate_file.filename != '':
+                        serial = existing_mail.get("serial_number")
+                        certificate_file.save(f'/tmp/{certificate_file.filename}')
+                        file_loc = f'/tmp/{certificate_file.filename}'
+                        res = check_certificate_validity(file_loc, email, path, public_key)
+                        if res != "valid":
+                            flash("Certificat invalide.", "error")
+                            return redirect(url_for('login'))
+                        if os.path.exists(file_loc):
+                            os.remove(file_loc)                        
+                        return "Authentification terminée"
+                    flash("Upload échoué.", "error")
                     return redirect(url_for('login'))
-                flash("Erreur d'upload.", "error")
-                return redirect(url_for('verify'))
+                flash("Utilisateur ou mot de passe incorrect", "error")
+                return redirect(url_for('login'))
+
             else:
-                flash("Email incorrect.", "error")
-                return redirect(url_for('verify'))
+                flash("Utilisateur ou mot de passe incorrect", "error")
+                return redirect(url_for('login'))
+        flash("Données incorrectes", "error")
+        return redirect(url_for('login')) 
 
-        return redirect(url_for('verify'))
-
-    return render_template('verify.html')
+    return render_template('login.html')
 
 ### SIGN-UP PAGE
 @app.route('/signup', methods=['GET', 'POST'])
@@ -159,12 +138,33 @@ def code():
             with open(f"{path}/certificates_ca/{serial_number}.pem", 'wb') as file:
                 file.write(pem_cert)
             db.user_collection.update_one({"email": email}, {"$set": {"serial_number": serial_number}})
+            db.user_collection.update_one({"email": email}, {"$set": {"status": "Active"}})
             flash("Code valide.", "info")
             return redirect(url_for('certificate'))
         else:
             flash("Email ou code incorrect.", "error")
             return redirect(url_for('code'))
     return render_template('code.html')
+
+### RESEND CODE PAGE
+@app.route('/resend', methods=['GET', 'POST'])
+def resend():
+    if request.method == 'POST':
+        email = request.form['email']
+
+        existing_mail = user_collection.find_one({"email": email})
+        if existing_mail:
+            status = existing_mail.get("status")
+            if status == "Active":
+                flash("Compte déjà activé.", "info")
+                return redirect(url_for('resend'))
+
+            send_mail(email, cryptomail_collection)
+            flash("Code envoyé.", "info")
+            return redirect(url_for('resend'))
+        else:
+            return flash("Code envoyé.", "info")
+    return render_template('resend.html')    
 
 ### CERTIFICATE WITH AUTHENTICATION PAGE
 @app.route('/certificate', methods=['GET', 'POST'])

@@ -29,9 +29,14 @@
                 <input type="text" id="prenom" name="prenom" class="form-control mr-2" required >
             </div>
             <input type="submit" value="Submit" class="btn btn-primary">
-            </div>
         </form>
-
+        <button onclick="redirectToIndex()" class="form-inline my-2 custom-button-blue" >Quitter</button>
+    </div>
+    <script>
+        function redirectToIndex() {
+            window.location.href = "/";
+        }
+    </script>
     
 </body>
 </html>

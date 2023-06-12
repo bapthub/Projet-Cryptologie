@@ -7,32 +7,29 @@
 </head>
 <body>
     <div class="container py-3">
-        <h1>Login</h1>
-        <form action="{{ url_for('login') }}" method="post" class="form-inline my-2" enctype="multipart/form-data">
+        <h2>Renvoyer un code</h2>
+        <form action="{{ url_for('resend') }}" method="post" class="form-inline my-2">
             <div class="form-group">
                 <label for="email" class="mr-2">Email:</label>
-                <input type="email" id="email" name="email" class="form-control mr-2" required>
-            </div>
-            <div class="form-group">
-                <label for="password" class="mr-2">Mot de passe:</label>
-                <input type="password" id="password" name="password" class="form-control mr-2" required>
-            </div>
-            <div class="box">
-                <input type="file" id="fileUpload" name="certificate" required>
-                <label for="fileUpload" style="visibility: hidden;">Sélectionner un fichier</label>
+                <input type="text" id="email" name="email" class="form-control mr-2">
             </div>
             <input type="submit" value="Submit" class="btn btn-primary">
         </form>
-        <button onclick="redirectToIndex()" class="form-inline my-2 custom-button-blue" >Quitter</button>
         {% for category, message in get_flashed_messages(with_categories=True) %}
             <div class="alert alert-{{category}}">{{ message }}</div>
         {% endfor %}
+        <button onclick="redirectToCode()" class="form-inline my-2" >Vérifier mon code</button>
+        <button onclick="redirectToIndex()" class="form-inline my-2 custom-button-blue" >Quitter</button>
     </div>
     <script>
         function redirectToIndex() {
             window.location.href = "/";
         }
+        function redirectToCode() {
+            window.location.href = "/code";
+        }
     </script>
 
+    
 </body>
 </html>

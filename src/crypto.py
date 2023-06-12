@@ -108,7 +108,7 @@ def generate_attribute_certificate(holder_name:str,holder_surname:str,holder_ema
     pem_cert = certificate.public_bytes(encoding=serialization.Encoding.PEM)
     return pem_cert,serial_number
 
-def check_certificate_validity_register(cert_path:str,email:str,path:str,
+def check_certificate_validity(cert_path:str,email:str,path:str,
                                public_key:rsa.RSAPublicKey) -> str:
     #Get certificate bytes from file
     with open(cert_path, 'rb') as cert_file:
@@ -156,50 +156,16 @@ def check_certificate_validity_register(cert_path:str,email:str,path:str,
     if certificate.not_valid_before > current_time or certificate.not_valid_after < current_time:
         return "expired"
 
-    user_collection.update_one({"email": email}, {"$set": {"start_date": certificate.not_valid_before}})
-    user_collection.update_one({"email": email}, {"$set": {"expiration_date": certificate.not_valid_after}})
     return "valid"
-
-def check_certificate_validity_login(email:str) -> str:
-
-    existing_mail = user_collection.find_one({"email": email})
-    start_date = existing_mail.get("start_date")
-    expiration_date = existing_mail.get("expiration_date")
-    serial = existing_mail.get("serial_number")
     
-    try:
-        # Check if certificate has been revoked
-        if revoked_collection.find_one({'serial_number': serial}) != None:
-            logging.debug("Certificate has been revoked")
-            raise Exception
-        # Check the certificate's validity period
-        current_time = datetime.datetime.now()
-        if start_date > current_time or expiration_date < current_time:
-            logging.debug("Certificate has expired")
-            raise Exception
-    except Exception:
-        return "invalid"
-    return "valid"
-
-
-def remove_certificate(serial_number:int,path:str) -> None:
-    if os.path.exists(f"{path}/certificates_ca/{serial_number}.pem"):
-        os.remove(f"{path}/certificates_ca/{serial_number}.pem")
-    try:
-        serial_collection.delete_one({"serial_number":serial_number})
-    except Exception as e:
-        logging.debug(f"Can't delete serial number {serial_number} in database. Error: {e}")
-    
-def revoke_certificate(serial_number:int,path:str):
-    # remove_certificate(serial_number,path)
+def revoke_certificate(serial_number:int):
     try:
         revoked_collection.insert_one({"serial_number":serial_number})
     except Exception as e:
         logging.debug(f"Can't insert serial number {serial_number} in database. Error: {e}")
         
-def revoke_all_certificates(path:str):
+def revoke_all_certificates():
     for cert in serial_collection.find():
         serial_number = cert["serial_number"]
         # Insert each document into the target collection
         revoked_collection.insert_one({"serial_number":serial_number})
-        # remove_certificate(serial_number,path)

@@ -29,14 +29,13 @@ def verify_mail(mail, cryptomail_collection, code):
         # Delete the code in the database
         delete_code(mail, cryptomail_collection, True)
         return True
-    else:
-        return False
+    return False
 
 
 def generate_email_code():
     # Generate a 6 digits code
     code = ""
-    for i in range(6):
+    for _ in range(6):
         code += str(random.randint(0, 9))
     return code
 
