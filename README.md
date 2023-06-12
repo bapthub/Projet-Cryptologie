@@ -1,8 +1,7 @@
 # CryptoMail
 
 CryptoMail est une application web basée sur Flask qui fournit une authentification sécurisée pour les utilisateurs. 
-Une caractéristique clé de cette application est qu'elle utilise des certificats d'attributs pour l'authentification des utilisateurs. 
-Une fois qu'un utilisateur s'est inscrit et a créé un compte, un certificat d'attribut unique est généré et doit être vérifié par l'utilisateur avant de pouvoir se connecter.
+Une caractéristique clé de cette application est l'utilisation de certificats d'attributs pour une authentification robuste et fiable.
 
 
 ## Prérequis
@@ -46,7 +45,7 @@ Une fois qu'un utilisateur s'est inscrit et a créé un compte, un certificat d'
 
 3. **Vérification de validité des certificats d'attributs** : La validité des certificats d'attributs des utilisateurs est vérifiée avant chaque connexion. Les certificats expirés ou révoqués ne sont pas acceptés.
 
-4. **Authentification par certificat d'attributs** : Lors de l'inscription, chaque utilisateur reçoit un certificat d'attributs unique qui doit être téléchargé et vérifié pour pouvoir se connecter. Ces certificats sont générés avec des paires de clés RSA et sont stockés sur le serveur.
+4. **Authentification par certificat d'attributs** : Lors de l'inscription, chaque utilisateur reçoit un certificat d'attributs unique qui doit être téléchargé et utilisé à chaque authentification. Ces certificats sont générés avec des paires de clés RSA et sont stockés sur le serveur.
 
 5. **Vérification par email** : Lorsqu'un utilisateur s'inscrit, un email de vérification avec un code unique est envoyé à l'adresse email de l'utilisateur. Ce code doit être saisi dans l'application pour compléter le processus d'inscription.
 
