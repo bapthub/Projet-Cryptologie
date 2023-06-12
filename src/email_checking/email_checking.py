@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv('.env')
 PASSWORD_SMTP = os.getenv("PASSWORD_SMTP")
 # Our mail used to send the codes
-sender = "cryptomailepita@gmail.com"
+sender = os.getenv("MAIL_SMTP")
 
 def send_mail(receiver, cryptomail_collection):
     # Generate a 6 digits code
